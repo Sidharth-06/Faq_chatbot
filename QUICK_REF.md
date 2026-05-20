@@ -93,12 +93,10 @@ API Routes:
 **Tables:**
 - `sessions` - Chat sessions (user_id, title, created_at)
 - `messages` - Chat messages (session_id, role, content, tokens)
-- `faq_documents` - Optional knowledge base
 
 **RLS Policies:**
 - Users can only see their own sessions
 - Users can only see messages from their sessions
-- FAQs visible to everyone
 
 ## 🔐 Authentication Flow
 

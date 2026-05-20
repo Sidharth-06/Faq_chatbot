@@ -67,7 +67,6 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 **Expected tables created:**
 - [ ] `sessions` table
 - [ ] `messages` table
-- [ ] `faq_documents` table
 - [ ] RLS policies enabled
 
 ### 2.6 Verify Database Setup

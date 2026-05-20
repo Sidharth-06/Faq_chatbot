@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# test files with API keys
+test_*.mjs
+check_*.mjs
+inspect_*.mjs
+list_*.mjs

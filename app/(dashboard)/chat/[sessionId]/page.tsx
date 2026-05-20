@@ -3,10 +3,13 @@
 import { useEffect, useState, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase-client';
+import { generateChatTitle, updateSessionTitle } from '@/lib/chat-title';
 import ChatWindow from '@/components/ChatWindow';
 import MessageInput from '@/components/MessageInput';
 import { Message } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
+
+const STREAMING_ID = '__streaming__';
 
 export default function ChatPage() {
   const params = useParams();
@@ -15,6 +18,13 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(!!sessionId);
   const [sending, setSending] = useState(false);
   const supabase = createClient();
+
+  // Track if we've already generated a title for this session
+  const titleGeneratedRef = useRef(false);
+
+  // While streaming is in flight, suppress real-time assistant inserts
+  const isStreamingRef = useRef(false);
+  const sendLockRef = useRef(false);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -26,11 +36,36 @@ export default function ChatPage() {
           .select('*')
           .eq('session_id', sessionId)
           .order('created_at', { ascending: true });
-
         if (error) throw error;
-        setMessages(data || []);
-      } catch (error) {
-        console.error('Error fetching messages:', error);
+        
+        const messages = data || [];
+        setMessages(messages);
+
+        // Generate title from first user message if still "New Chat"
+        if (messages.length > 0 && !titleGeneratedRef.current) {
+          const firstUserMsg = messages.find((m: Message) => m.role === 'user');
+          if (firstUserMsg && firstUserMsg.content) {
+            titleGeneratedRef.current = true;
+            const generatedTitle = generateChatTitle(firstUserMsg.content);
+            
+            // Update session title if it's still "New Chat"
+            const { data: sessionData } = await supabase
+              .from('sessions')
+              .select('title')
+              .eq('id', sessionId)
+              .single();
+            
+            if (sessionData?.title === 'New Chat') {
+              await updateSessionTitle(sessionId, generatedTitle, supabase);
+              // Dispatch event for sidebar update
+              window.dispatchEvent(new CustomEvent('sessionTitleUpdated', {
+                detail: { sessionId, title: generatedTitle }
+              }));
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching messages:', err);
       } finally {
         setLoading(false);
       }
@@ -38,7 +73,6 @@ export default function ChatPage() {
 
     fetchMessages();
 
-    // Subscribe to real-time updates
     const channel = supabase
       .channel(`messages:${sessionId}`)
       .on(
@@ -50,7 +84,26 @@ export default function ChatPage() {
           filter: `session_id=eq.${sessionId}`,
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
+          const incoming = payload.new as Message;
+
+          // User messages are already shown optimistically — skip
+          if (incoming.role === 'user') return;
+
+          // If we are currently streaming we already have the content in state;
+          // the DB insert will arrive here once streaming finishes.
+          // At that point replace the STREAMING_ID placeholder with the real DB row
+          // (it has the correct id, created_at, tokens_used, etc.)
+          if (incoming.role === 'assistant') {
+            setMessages((prev) => {
+              const hasPlaceholder = prev.some((m) => m.id === STREAMING_ID);
+              if (hasPlaceholder) {
+                // Swap placeholder for the real persisted message
+                return prev.map((m) => (m.id === STREAMING_ID ? incoming : m));
+              }
+              // No placeholder — this is a message from another session/tab
+              return [...prev, incoming];
+            });
+          }
         }
       )
       .subscribe();
@@ -61,61 +114,179 @@ export default function ChatPage() {
   }, [sessionId, supabase]);
 
   const handleSendMessage = async (content: string) => {
-    if (!sessionId) return;
-
+    if (!sessionId || sendLockRef.current) return;
+    sendLockRef.current = true;
     setSending(true);
-    try {
-      // Add user message to state immediately (optimistic update)
-      const userMessage: Message = {
-        id: crypto.randomUUID(),
-        session_id: sessionId,
-        user_id: '',
-        role: 'user',
-        content,
-        tokens_used: 0,
-        created_at: new Date().toISOString(),
-      };
-      setMessages((prev) => [...prev, userMessage]);
+    isStreamingRef.current = true;
 
-      // Call chat API
+    // Optimistic user bubble
+    const tempUserId = crypto.randomUUID();
+    const userMessage: Message = {
+      id: tempUserId,
+      session_id: sessionId,
+      user_id: '',
+      role: 'user',
+      content,
+      tokens_used: 0,
+      created_at: new Date().toISOString(),
+    };
+
+    // Empty assistant placeholder that will be filled chunk-by-chunk
+    const placeholder: Message = {
+      id: STREAMING_ID,
+      session_id: sessionId,
+      user_id: '',
+      role: 'assistant',
+      content: '',
+      tokens_used: 0,
+      created_at: new Date().toISOString(),
+    };
+
+    setMessages((prev) => {
+      if (prev.some((m) => m.id === STREAMING_ID)) {
+        return prev;
+      }
+
+      // If this is the first message and no title was generated yet, generate one
+      if (prev.length === 0 && !titleGeneratedRef.current) {
+        titleGeneratedRef.current = true;
+        const generatedTitle = generateChatTitle(content);
+        // Dispatch event immediately so sidebar updates
+        window.dispatchEvent(new CustomEvent('sessionTitleUpdated', {
+          detail: { sessionId, title: generatedTitle }
+        }));
+        // Update DB in background
+        updateSessionTitle(sessionId, generatedTitle, supabase).catch(console.error);
+      }
+
+      return [...prev, userMessage, placeholder];
+    });
+
+    try {
+      const savedModel = typeof window !== 'undefined' ? localStorage.getItem('resolv_selected_model') : null;
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          session_id: sessionId,
+        body: JSON.stringify({ 
+          session_id: sessionId, 
           message: content,
+          model: savedModel || undefined
         }),
       });
 
-      if (!response.ok) throw new Error('Failed to send message');
-      
-      // Message will be added via real-time subscription
+      if (!response.ok || !response.body) {
+        const errData = await response.json().catch(() => ({}));
+        const errorMsg = errData.error ?? 'Failed to send message';
+        
+        // Show more helpful error message for rate limits
+        if (response.status === 429) {
+          alert('⏳ Rate limited. Please wait a moment and try again.');
+        } else {
+          alert(`❌ ${errorMsg}`);
+        }
+        
+        throw new Error(errorMsg);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      // SSE buffer — chunks may be split mid-event
+      let sseBuffer = '';
+      let accumulated = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        // Append raw bytes to buffer
+        sseBuffer += decoder.decode(value, { stream: true });
+
+        // Split on double-newline (SSE event boundary)
+        const events = sseBuffer.split('\n\n');
+        // Keep the last (possibly incomplete) segment in the buffer
+        sseBuffer = events.pop() ?? '';
+
+        for (const event of events) {
+          const line = event.trim();
+          if (!line.startsWith('data: ')) continue;
+
+          let json: Record<string, unknown>;
+          try {
+            json = JSON.parse(line.slice(6));
+          } catch {
+            continue; // Malformed — skip
+          }
+
+          if (typeof json.delta === 'string') {
+            accumulated += json.delta;
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === STREAMING_ID ? { ...m, content: accumulated } : m
+              )
+            );
+          }
+
+          // `done` event carries the final text + token count.
+          // The real-time subscription will replace STREAMING_ID once the DB
+          // insert arrives — we just need to ensure accumulated stays correct.
+          if (json.done && typeof json.fullText === 'string') {
+            accumulated = json.fullText as string;
+            // Pre-update with final text so there's no flash before DB row arrives
+            setMessages((prev) =>
+              prev.map((m) =>
+                m.id === STREAMING_ID
+                  ? { ...m, content: accumulated, tokens_used: (json.tokens as number) ?? 0 }
+                  : m
+              )
+            );
+          }
+        }
+      }
     } catch (error) {
-      console.error('Error sending message:', error);
-      // Remove the optimistic message on error
-      setMessages((prev) => prev.slice(0, -1));
+      console.error('Chat error:', error);
+      // Clean up — remove both optimistic messages
+      setMessages((prev) =>
+        prev.filter((m) => m.id !== tempUserId && m.id !== STREAMING_ID)
+      );
     } finally {
+      isStreamingRef.current = false;
+      sendLockRef.current = false;
       setSending(false);
     }
   };
 
+  // Auto-send a prompt that was stored before navigating to this session
+  useEffect(() => {
+    if (loading) return;
+    const pendingPrompt = localStorage.getItem('pendingPrompt');
+    if (pendingPrompt && messages.length === 0) {
+      localStorage.removeItem('pendingPrompt');
+      handleSendMessage(pendingPrompt);
+    }
+  }, [loading, messages, sessionId]);
+
   if (!sessionId) {
     return (
-      <div className="flex-1 flex items-center justify-center flex-col gap-4">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center">
-          <span className="text-white text-2xl font-bold">FB</span>
+      <div className="flex-1 flex items-center justify-center flex-col gap-4 bg-[#fdf6f2]">
+        <div className="w-16 h-16 bg-zinc-900 rounded-2xl flex items-center justify-center shadow-[4px_4px_0px_0px_#475569]">
+          <Loader2 className="w-8 h-8 animate-spin text-white" />
         </div>
-        <h1 className="text-3xl font-bold text-gray-800">Welcome to FAQ Chatbot</h1>
-        <p className="text-gray-600">Select a chat or create a new one to get started</p>
+        <h1 className="text-2xl font-extrabold text-zinc-900 font-display">Resolv.ai Assistant</h1>
+        <p className="text-zinc-500 text-sm font-semibold">Select a chat or create a new one to get started</p>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-[#fdf6f2]">
       {loading ? (
         <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="w-8 h-8 animate-spin text-zinc-500" />
+            <span className="text-xs font-extrabold text-zinc-400 tracking-widest uppercase font-mono">
+              Loading history...
+            </span>
+          </div>
         </div>
       ) : (
         <>

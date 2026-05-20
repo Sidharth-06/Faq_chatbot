@@ -5,7 +5,14 @@ import { createClient } from '@/lib/supabase-client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Sparkles, Mail, Lock, AlertCircle, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { FieldGroup, Field, FieldLabel } from '@/components/ui/field';
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from '@/components/ui/input-group';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -37,69 +44,117 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-600 to-purple-700 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#e05e55] text-zinc-900 flex items-center justify-center p-4 relative overflow-hidden font-sans selection:bg-zinc-900 selection:text-white">
+      {/* Organic chalky overlay texture effect */}
+      <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md"
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="w-full max-w-md relative z-10"
       >
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">
-            FAQ Chatbot
-          </h1>
-          <p className="text-center text-gray-600 mb-8">
-            Sign in to your account
-          </p>
+        <div className="bg-white border-3 border-zinc-900 rounded-2xl p-8 shadow-[8px_8px_0px_0px_#18181b] relative overflow-hidden">
+          
+          {/* Brand Header with Hexagon */}
+          <div className="flex flex-col items-center mb-8 gap-2.5">
+            <Link href="/" className="flex items-center gap-3">
+              <div 
+                className="w-11 h-11 bg-zinc-900 flex items-center justify-center shadow-md animate-doodle-wiggle cursor-pointer select-none"
+                style={{ clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)' }}
+              >
+                <div className="text-center text-[6.5px] font-extrabold tracking-widest text-white leading-none px-0.5 uppercase">
+                  An Artful Science®
+                </div>
+              </div>
+              <span className="font-extrabold text-2xl tracking-tight font-display text-zinc-900">
+                Resolv<span className="text-zinc-900/60">.ai</span>
+              </span>
+            </Link>
+            <p className="text-zinc-700 text-sm font-bold mt-1 text-center">
+              Welcome back! Please sign in to your workspace.
+            </p>
+          </div>
 
+          {/* Error Banner in hand-drawn design */}
           {error && (
-            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
-              {error}
-            </div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-red-50 border-2 border-red-500 text-red-950 px-4 py-3 rounded-xl mb-6 flex items-start gap-2.5 text-sm font-bold shadow-[2px_2px_0px_0px_#ef4444]"
+            >
+              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </motion.div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                required
-              />
-            </div>
+          {/* Sign In Form */}
+          <form onSubmit={handleLogin}>
+            <FieldGroup className="flex flex-col gap-5">
+              
+              <Field className="flex flex-col gap-1.5">
+                <FieldLabel className="text-xs font-extrabold text-zinc-900 uppercase tracking-widest">
+                  Email Address
+                </FieldLabel>
+                <InputGroup className="bg-white border-2 border-zinc-900 focus-within:border-zinc-900 focus-within:ring-0 py-6 rounded-xl transition duration-200 shadow-[2px_2px_0px_0px_#18181b]">
+                  <InputGroupAddon align="inline-start" className="pl-4">
+                    <Mail className="w-4 h-4 text-zinc-500" />
+                  </InputGroupAddon>
+                  <InputGroupInput
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@company.com"
+                    className="text-zinc-900 placeholder-zinc-400 text-sm font-bold"
+                    required
+                  />
+                </InputGroup>
+              </Field>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                required
-              />
-            </div>
+              <Field className="flex flex-col gap-1.5">
+                <FieldLabel className="text-xs font-extrabold text-zinc-900 uppercase tracking-widest">
+                  Password
+                </FieldLabel>
+                <InputGroup className="bg-white border-2 border-zinc-900 focus-within:border-zinc-900 focus-within:ring-0 py-6 rounded-xl transition duration-200 shadow-[2px_2px_0px_0px_#18181b]">
+                  <InputGroupAddon align="inline-start" className="pl-4">
+                    <Lock className="w-4 h-4 text-zinc-500" />
+                  </InputGroupAddon>
+                  <InputGroupInput
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="text-zinc-900 placeholder-zinc-400 text-sm font-bold"
+                    required
+                  />
+                </InputGroup>
+              </Field>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center justify-center gap-2 disabled:opacity-70"
-            >
-              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {loading ? 'Signing in...' : 'Sign In'}
-            </button>
+              {/* Doodle Action Button */}
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full py-6 bg-zinc-900 hover:bg-zinc-800 text-white font-extrabold text-lg text-center transition-all duration-200 rounded-xl flex items-center justify-center gap-2.5 shadow-[4px_4px_0px_0px_#475569] hover:translate-y-0.5 hover:shadow-[2px_2px_0px_0px_#475569] cursor-pointer border-2 border-zinc-900 mt-2 hover:text-white"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin text-white" />
+                    <span>Signing in...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Sign In</span>
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
+              </Button>
+            </FieldGroup>
           </form>
 
-          <p className="text-center text-gray-600 mt-6">
+          {/* Toggle Screen Option */}
+          <p className="text-center text-zinc-600 mt-6 text-sm font-bold">
             Don't have an account?{' '}
-            <Link href="/signup" className="text-blue-600 hover:underline font-semibold">
+            <Link href="/signup" className="text-zinc-900 hover:underline font-extrabold transition">
               Sign up
             </Link>
           </p>

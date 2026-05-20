@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Send, Loader2 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
 
 interface MessageInputProps {
   onSendMessage: (message: string) => void;
@@ -42,29 +44,31 @@ export default function MessageInput({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="border-t border-gray-200 bg-white p-4">
-      <div className="max-w-4xl mx-auto flex gap-3">
-        <textarea
-          ref={textareaRef}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Type your question... (Shift+Enter for new line)"
-          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none max-h-32"
-          disabled={disabled}
-          rows={1}
-        />
-        <button
+    <form onSubmit={handleSubmit} className="bg-zinc-50 pb-6 px-6 pt-3 relative z-10 transition duration-300 border-t border-zinc-200/60">
+      <div className="max-w-4xl mx-auto flex gap-3 items-end">
+        <div className="flex-1 bg-white border border-zinc-200 rounded-xl px-4 py-2.5 transition duration-150 flex items-center shadow-xs focus-within:border-zinc-300/80 focus-within:shadow-sm">
+          <Textarea
+            ref={textareaRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Type your question... (Shift+Enter for new line)"
+            className="flex-1 bg-transparent border-none min-h-[24px] h-auto p-0 md:text-sm text-zinc-800 placeholder-zinc-400 outline-none focus-visible:ring-0 focus-visible:border-transparent resize-none max-h-32 pr-2 leading-relaxed font-medium"
+            disabled={disabled}
+            rows={1}
+          />
+        </div>
+        <Button
           type="submit"
           disabled={disabled || !input.trim()}
-          className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          className="h-[44px] w-[44px] rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all duration-150 shadow-sm hover:translate-y-[-1px] flex items-center justify-center shrink-0 cursor-pointer border border-indigo-500 hover:text-white"
         >
           {disabled ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="w-4 h-4 animate-spin text-white" />
           ) : (
             <Send className="w-4 h-4" />
           )}
-        </button>
+        </Button>
       </div>
     </form>
   );

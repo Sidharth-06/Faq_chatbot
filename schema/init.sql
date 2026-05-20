@@ -24,16 +24,6 @@ CREATE TABLE IF NOT EXISTS messages (
   UNIQUE(id)
 );
 
--- FAQ Documents table (optional knowledge base)
-CREATE TABLE IF NOT EXISTS faq_documents (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT NOT NULL,
-  content TEXT NOT NULL,
-  category TEXT,
-  created_at TIMESTAMP DEFAULT now(),
-  updated_at TIMESTAMP DEFAULT now()
-);
-
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_created_at ON sessions(created_at);
@@ -44,7 +34,6 @@ CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at);
 -- Enable RLS (Row Level Security)
 ALTER TABLE sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE faq_documents ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policies
 -- Sessions: Users can only see their own sessions
@@ -82,7 +71,3 @@ CREATE POLICY "Users can insert messages to their sessions"
     ) AND user_id = auth.uid()
   );
 
--- FAQ Documents: Everyone can view, admin can edit (you can refine this)
-CREATE POLICY "Everyone can view FAQ documents"
-  ON faq_documents FOR SELECT
-  USING (true);

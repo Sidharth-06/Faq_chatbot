@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase-client';
 import { useRouter } from 'next/navigation';
-import Navbar from '@/components/Navbar';
 import Sidebar from '@/components/Sidebar';
 import { Loader2 } from 'lucide-react';
 
@@ -33,19 +32,19 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      <div className="min-h-screen flex items-center justify-center bg-[#fdf6f2] font-sans">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-zinc-900" />
+          <span className="text-xs font-extrabold text-zinc-600 tracking-widest uppercase">Loading Resolv.ai...</span>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen flex-col md:flex-row">
+    <div className="flex h-screen">
       <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Navbar />
-        <main className="flex-1 overflow-auto">{children}</main>
-      </div>
+      <main className="flex-1 overflow-auto">{children}</main>
     </div>
   );
 }
