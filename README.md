@@ -2,7 +2,7 @@
 
 A modern, intelligent FAQ chatbot built with Next.js, React, and AI-powered responses. Resolv.ai provides instant, contextually-aware answers with beautiful markdown rendering, real-time chat management, and enterprise-grade reliability.
 
-## ✨ Features
+## Features
 
 ### Core Functionality
 - **AI-Powered Responses**: Leverages OpenRouter API for intelligent, context-aware answers
@@ -35,7 +35,7 @@ A modern, intelligent FAQ chatbot built with Next.js, React, and AI-powered resp
 - **Protected Routes**: Dashboard and chat routes require authentication
 - **Server-side Validation**: All API endpoints validate user context
 
-## 🏗️ Architecture
+## Architecture
 
 ### Tech Stack
 
@@ -103,7 +103,7 @@ faq-chatbot/
     └── init.sql             # Database schema
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -161,7 +161,7 @@ faq-chatbot/
 
    The app will be available at `http://localhost:3000`
 
-## 📖 Usage
+## Usage
 
 ### Create an Account
 1. Visit the signup page at `/signup`
@@ -185,7 +185,7 @@ faq-chatbot/
 - View current AI model selection
 - Access logout functionality
 
-## 🔑 Key Components Explained
+## Key Components Explained
 
 ### Message Assembly Pattern (`lib/conversation-context.ts`)
 
@@ -241,7 +241,7 @@ Enhanced markdown rendering with multiple plugins:
 - **Tables**: Styled with Tailwind for responsive display
 - **Blockquotes & Lists**: Semantic HTML with consistent styling
 
-## 🔄 API Routes
+## API Routes
 
 ### POST `/api/chat`
 Sends a message and receives an AI response.
@@ -269,7 +269,7 @@ Manages chat sessions.
 **GET:** Fetch all sessions for the current user
 **POST:** Create a new session
 
-## 🗄️ Database Schema
+## Database Schema
 
 ### `sessions` table
 ```sql
@@ -291,7 +291,7 @@ Manages chat sessions.
 - created_at (timestamp)
 ```
 
-## 🛡️ Error Handling
+## Error Handling
 
 ### Rate Limiting (429)
 - Automatic retry with exponential backoff: 1s → 2s → 4s
@@ -312,7 +312,7 @@ Manages chat sessions.
 - Fast fail (no retries for non-recoverable errors)
 - Descriptive error messages shown to user
 
-## 🧪 Testing
+## Testing
 
 Run the test suite:
 ```bash
@@ -326,7 +326,7 @@ The test suite includes:
 - Chronological ordering tests
 - Race condition prevention tests
 
-## 📦 Dependencies
+## Dependencies
 
 ### Core
 - `next`: 16.2.6 - React framework with SSR
@@ -351,7 +351,7 @@ The test suite includes:
 - `@supabase/supabase-js`: Latest - Database & auth client
 - `react-hot-toast`: ^2 - Notifications
 
-## 🚦 Running the App
+## Running the App
 
 **Development:**
 ```bash
@@ -375,7 +375,7 @@ npm run lint
 npx tsc --noEmit
 ```
 
-## 🔐 Environment Variables
+## Environment Variables
 
 All required environment variables:
 
@@ -388,7 +388,7 @@ All required environment variables:
 | `OPENROUTER_BASE_URL` | OpenRouter API endpoint | `https://openrouter.ai/api/v1` |
 | `NODE_ENV` | Environment | `development` or `production` |
 
-## 🎨 Customization
+## Customization
 
 ### Change AI Model
 Edit the default model in the UI or store preference in localStorage:
@@ -422,7 +422,7 @@ Modify markdown plugins in `components/ChatMessage.tsx`:
 </ReactMarkdown>
 ```
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### "Failed to send message" error
 - Check OpenRouter API key is valid
@@ -444,7 +444,7 @@ Modify markdown plugins in `components/ChatMessage.tsx`:
 - Check `globals.css` has syntax highlighting styles
 - Verify mermaid is properly initialized
 
-## 📚 Resources
+## Resources
 
 - [Next.js Docs](https://nextjs.org/docs)
 - [Supabase Docs](https://supabase.com/docs)
@@ -453,11 +453,11 @@ Modify markdown plugins in `components/ChatMessage.tsx`:
 - [Tailwind CSS](https://tailwindcss.com)
 - [shadcn/ui](https://ui.shadcn.com)
 
-## 📝 License
+## License
 
 This project is open source and available under the MIT License.
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please follow these steps:
 
@@ -467,10 +467,10 @@ Contributions are welcome! Please follow these steps:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📧 Contact
+## Contact
 
 For questions or suggestions, please open an issue on GitHub or reach out to the maintainers.
 
 ---
 
-**Made with ❤️ by the Resolv.ai team**
+**Made with care by the Resolv.ai team**
