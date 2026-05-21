@@ -43,15 +43,8 @@ async function withRetry<T>(
   throw lastError;
 }
 
-// OpenRouter is fully OpenAI-compatible — just point baseURL at their endpoint
-const openai = new OpenAI({
-  baseURL: 'https://openrouter.ai/api/v1',
-  apiKey: process.env.OPENROUTER_API_KEY || '',
-  defaultHeaders: {
-    'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-    'X-Title': 'Resolv.ai',
-  },
-});
+
+
 
 interface Attachment {
   name: string;
@@ -106,6 +99,16 @@ function processMessageAttachments(content: string): { cleanedText: string; extr
 }
 
 export async function POST(request: Request) {
+  // Lazy-init: client created inside handler so missing env vars don't crash build
+  const openai = new OpenAI({
+    baseURL: 'https://openrouter.ai/api/v1',
+    apiKey: process.env.OPENROUTER_API_KEY ?? '',
+    defaultHeaders: {
+      'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
+      'X-Title': 'Resolv.ai',
+    },
+  });
+
   try {
     const body = await request.json();
     const { session_id, message, model = 'openai/gpt-oss-20b:free' } = body;
