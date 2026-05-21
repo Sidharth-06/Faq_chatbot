@@ -16,21 +16,20 @@ interface ModelOption {
 }
 
 const POPULAR_MODELS: ModelOption[] = [
-  { id: 'google/gemini-2.5-flash:free', name: 'Gemini 2.5 Flash', desc: 'Fast, multimodal model from Google' },
-  { id: 'google/gemini-2.5-pro:free', name: 'Gemini 2.5 Pro', desc: 'Google reasoning and high-context powerhouse' },
-  { id: 'deepseek/deepseek-r1:free', name: 'DeepSeek R1', desc: 'Advanced reasoning and step-by-step thinking' },
-  { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B', desc: 'State-of-the-art open-weights model' },
-  { id: 'qwen/qwen-2.5-72b-instruct:free', name: 'Qwen 2.5 72B', desc: 'Highly accurate and versatile model' },
-  { id: 'mistralai/mistral-7b-instruct:free', name: 'Mistral 7B', desc: 'Fast, compact, and highly functional' },
-  { id: 'microsoft/phi-3-medium-128k-instruct:free', name: 'Phi-3 Medium', desc: 'High quality small language model' },
+  { id: 'nvidia/nemotron-nano-12b-v2-vl:free', name: 'Nemotron Nano 12B V2 VL', desc: 'NVIDIA Multimodal model' },
+  { id: 'qwen/qwen3-next-80b-a3b-instruct:free', name: 'Qwen3 Next 80B A3B', desc: 'High capability Qwen next-gen model' },
+  { id: 'nvidia/nemotron-nano-9b-v2:free', name: 'Nemotron Nano 9B V2', desc: 'NVIDIA highly optimized language model' },
+  { id: 'openai/gpt-oss-120b:free', name: 'GPT OSS 120B', desc: 'Large open source instruction model' },
+  { id: 'openai/gpt-oss-20b:free', name: 'GPT OSS 20B', desc: 'Fast general-purpose instruction model' },
+  { id: 'z-ai/glm-4.5-air:free', name: 'GLM 4.5 Air', desc: 'High context, creative reasoning model' },
 ];
 
 const DEFAULT_MODELS = [
-  'google/gemini-2.5-flash:free',
-  'google/gemini-2.5-pro:free',
-  'deepseek/deepseek-r1:free',
-  'meta-llama/llama-3.3-70b-instruct:free',
-  'qwen/qwen-2.5-72b-instruct:free',
+  'nvidia/nemotron-nano-12b-v2-vl:free',
+  'qwen/qwen3-next-80b-a3b-instruct:free',
+  'nvidia/nemotron-nano-9b-v2:free',
+  'openai/gpt-oss-120b:free',
+  'openai/gpt-oss-20b:free',
 ];
 
 export default function SettingsPage() {
