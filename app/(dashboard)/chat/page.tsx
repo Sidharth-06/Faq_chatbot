@@ -6,6 +6,8 @@ import { Sparkles, Send, Loader2 } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import toast from 'react-hot-toast';
+import ShinyText from '@/components/ShinyText';
+import SpotlightCard from '@/components/SpotlightCard';
 
 export default function ChatDefaultPage() {
   const [input, setInput] = useState('');
@@ -62,30 +64,32 @@ export default function ChatDefaultPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center p-6 bg-zinc-50 text-zinc-800 min-h-full selection:bg-zinc-900 selection:text-white">
+    <div className="flex-1 flex flex-col items-center justify-center p-6 bg-white text-zinc-900 min-h-full selection:bg-zinc-900 selection:text-white">
       <div className="max-w-2xl w-full text-center relative z-10">
-        <div className="relative mb-6 inline-flex items-center justify-center">
-          <div className="w-14 h-14 bg-indigo-50 border border-indigo-100 text-indigo-600 rounded-2xl flex items-center justify-center shadow-xs">
-            <Sparkles className="w-7 h-7" />
-          </div>
+        
+        {/* Soothing Float Sparkles Icon */}
+        <div className="w-12 h-12 bg-brand-cream border border-black text-brand-red rounded-none flex items-center justify-center mx-auto shadow-[2px_2px_0_0_#000] mb-6 animate-soothing-float">
+          <Sparkles className="w-5 h-5 animate-slow-pulse" />
         </div>
 
         <div className="mb-10">
-          <h1 className="text-3xl font-bold tracking-tight text-zinc-900 font-display">
-            Resolv<span className="text-indigo-600">.ai</span> Chat
+          <h1 className="text-2xl font-black tracking-tight text-zinc-950 uppercase tracking-wider font-display flex items-center justify-center gap-0.5">
+            <span className="text-brand-red">Resolve</span>
+            <span className="text-zinc-950 font-medium">.ai</span> Workspace
           </h1>
-          <p className="text-zinc-500 max-w-md mx-auto text-sm font-medium mt-2 leading-relaxed">
-            Start a conversation in real time. Ask a question or launch a starter prompt below.
+          <p className="text-zinc-500 max-w-md mx-auto text-xs font-bold leading-relaxed mt-2 uppercase tracking-wide">
+            Start an interactive resolution session. Choose a system preset below or input a custom prompt.
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="mb-8 flex gap-3 text-left">
-          <div className="flex-1 bg-white border border-zinc-200 rounded-xl px-4 py-2.5 transition duration-150 flex items-center shadow-xs focus-within:border-zinc-300/80 focus-within:shadow-sm">
+        {/* Input prompt system container */}
+        <form onSubmit={handleSubmit} className="mb-10 max-w-xl mx-auto flex items-end gap-3 bg-white border border-black p-2.5 rounded-none shadow-[2px_2px_0_0_#000] focus-within:shadow-[3px_3px_0_0_#000] focus-within:translate-x-[-0.5px] focus-within:translate-y-[-0.5px] transition-all duration-150">
+          <div className="flex-1 min-h-[36px] flex items-center">
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask me anything..."
-              className="flex-1 bg-transparent border-none min-h-[24px] h-auto p-0 text-sm text-zinc-800 placeholder-zinc-400 outline-none focus-visible:ring-0 focus-visible:border-transparent resize-none max-h-32 pr-2 leading-relaxed font-medium"
+              placeholder="Send a message..."
+              className="w-full bg-transparent border-none min-h-[28px] h-auto p-1.5 text-sm text-zinc-950 placeholder-zinc-400 outline-none focus-visible:ring-0 focus-visible:border-transparent resize-none max-h-32 pr-2 leading-relaxed font-medium font-sans"
               disabled={loading}
               rows={1}
             />
@@ -93,36 +97,43 @@ export default function ChatDefaultPage() {
           <Button
             type="submit"
             disabled={loading || !input.trim()}
-            className="h-[44px] w-[44px] rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all duration-150 shadow-sm hover:translate-y-[-1px] flex items-center justify-center shrink-0 cursor-pointer border border-indigo-500 hover:text-white"
+            className="bg-zinc-950 text-white hover:bg-zinc-900 border border-black text-[10px] font-black uppercase tracking-widest py-3 px-5 shadow-[2px_2px_0_0_#000] hover:translate-x-[0.5px] hover:translate-y-[0.5px] hover:shadow-[1px_1px_0_0_#000] active:translate-x-[1.5px] active:translate-y-[1.5px] active:shadow-[0px_0px_0_0_#000] transition-all duration-150 cursor-pointer flex items-center gap-2 shrink-0 disabled:opacity-40 disabled:pointer-events-none disabled:shadow-none"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin text-white" /> : <Send className="w-4 h-4" />}
+            {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin text-white" /> : <Send className="w-3.5 h-3.5" />}
           </Button>
         </form>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left mb-8">
+        {/* System Presets Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left mb-10">
           {starterPrompts.map((prompt, idx) => (
-            <button
+            <SpotlightCard
               key={idx}
-              onClick={() => handlePromptClick(prompt.text)}
-              className="p-5 bg-white border border-zinc-200/80 rounded-xl hover:border-zinc-350 shadow-xs hover:translate-y-[-1px] hover:shadow-sm transition-all duration-150 group cursor-pointer text-left"
+              className="bg-white border border-black rounded-none shadow-[2px_2px_0_0_#000] hover:translate-y-[-1px] hover:shadow-[3px_3px_0_0_#000] transition-all duration-150 group cursor-pointer"
             >
-              <span className="text-[10px] font-semibold text-indigo-600 uppercase tracking-wider block mb-2 font-mono">
-                {prompt.category}
-              </span>
-              <h4 className="font-semibold text-sm text-zinc-900 group-hover:text-indigo-600 transition mb-1.5">
-                {prompt.title}
-              </h4>
-              <p className="text-zinc-500 text-xs leading-relaxed font-medium line-clamp-3">
-                '{prompt.text}'
-              </p>
-            </button>
+              <button
+                onClick={() => handlePromptClick(prompt.text)}
+                className="w-full h-full p-5 text-left flex flex-col justify-between bg-transparent outline-none focus:outline-none cursor-pointer"
+              >
+                <div>
+                  <span className="text-[8px] font-black text-brand-red uppercase tracking-widest block mb-2 font-mono">
+                    {prompt.category}
+                  </span>
+                  <h4 className="font-black text-xs text-zinc-900 group-hover:text-brand-red uppercase tracking-wider transition mb-1.5">
+                    {prompt.title}
+                  </h4>
+                  <p className="text-zinc-500 text-[10px] leading-relaxed font-bold tracking-wide">
+                    "{prompt.text}"
+                  </p>
+                </div>
+              </button>
+            </SpotlightCard>
           ))}
         </div>
 
         <div>
           <button
             onClick={() => window.dispatchEvent(new CustomEvent('newChat'))}
-            className="px-6 py-3.5 bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-sm rounded-xl transition duration-150 border border-zinc-800 shadow-sm cursor-pointer"
+            className="px-6 py-3 bg-zinc-950 hover:bg-zinc-900 text-white font-black text-xs uppercase tracking-widest rounded-none border border-black shadow-[2.5px_2.5px_0_0_#000] hover:translate-x-[0.5px] hover:translate-y-[0.5px] hover:shadow-[1.5px_1.5px_0_0_#000] active:translate-x-[1.5px] active:translate-y-[1.5px] active:shadow-[0px_0px_0_0_#000] transition-all duration-150 cursor-pointer"
           >
             Start Custom Session
           </button>

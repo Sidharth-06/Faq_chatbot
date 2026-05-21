@@ -5,14 +5,11 @@ import { createClient } from '@/lib/supabase-client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Loader2, Sparkles, Mail, Lock, AlertCircle, ArrowRight } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { FieldGroup, Field, FieldLabel } from '@/components/ui/field';
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from '@/components/ui/input-group';
+import Squares from '@/components/Squares';
+import SpotlightCard from '@/components/SpotlightCard';
+import ShinyText from '@/components/ShinyText';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -44,121 +41,125 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#e05e55] text-zinc-900 flex items-center justify-center p-4 relative overflow-hidden font-sans selection:bg-zinc-900 selection:text-white">
-      {/* Organic chalky overlay texture effect */}
-      <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+    <div className="min-h-screen bg-brand-cream text-zinc-950 flex items-center justify-center p-4 relative overflow-hidden font-sans select-none">
+      {/* Interactive Squares background overlay from ReactBits */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <Squares 
+          direction="diagonal"
+          speed={0.4}
+          borderColor="rgba(0, 0, 0, 0.04)"
+          hoverFillColor="rgba(168, 44, 36, 0.06)"
+        />
+      </div>
+
+      {/* Diagonal paper grain pattern overlay */}
+      <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:12px_12px] pointer-events-none z-0" />
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-        className="w-full max-w-md relative z-10"
+        transition={{ duration: 0.4, ease: 'easeOut' }}
+        className="w-full max-w-[440px] relative z-10"
       >
-        <div className="bg-white border-3 border-zinc-900 rounded-2xl p-8 shadow-[8px_8px_0px_0px_#18181b] relative overflow-hidden">
+        <SpotlightCard className="bg-white border-2 border-black p-8 shadow-[8px_8px_0px_0px_#000] rounded-none relative overflow-hidden transition-all duration-300 hover:shadow-[10px_10px_0px_0px_#000] w-full">
           
-          {/* Brand Header with Hexagon */}
-          <div className="flex flex-col items-center mb-8 gap-2.5">
-            <Link href="/" className="flex items-center gap-3">
-              <div 
-                className="w-11 h-11 bg-zinc-900 flex items-center justify-center shadow-md animate-doodle-wiggle cursor-pointer select-none"
-                style={{ clipPath: 'polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)' }}
-              >
-                <div className="text-center text-[6.5px] font-extrabold tracking-widest text-white leading-none px-0.5 uppercase">
-                  An Artful Science®
-                </div>
-              </div>
-              <span className="font-extrabold text-2xl tracking-tight font-display text-zinc-900">
-                Resolv<span className="text-zinc-900/60">.ai</span>
-              </span>
+          {/* Header Logo */}
+          <div className="flex flex-col items-center mb-7 text-center">
+            <Link 
+              href="/" 
+              className="flex items-center gap-1 text-xl font-extrabold tracking-tight text-brand-red mb-4 hover:scale-[1.01] transition-transform duration-200"
+            >
+              <span className="text-brand-red font-black">Resolve</span>
+              <span className="text-black font-medium">.ai</span>
             </Link>
-            <p className="text-zinc-700 text-sm font-bold mt-1 text-center">
-              Welcome back! Please sign in to your workspace.
+            <h2 className="text-2xl font-extrabold tracking-tight text-zinc-950 mt-1 font-display select-none">
+              Welcome back
+            </h2>
+            <p className="text-zinc-500 text-xs font-bold mt-1.5 leading-relaxed max-w-[280px]">
+              Please enter your credentials to access the platform.
             </p>
           </div>
 
-          {/* Error Banner in hand-drawn design */}
+          {/* Error Banner */}
           {error && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-red-50 border-2 border-red-500 text-red-950 px-4 py-3 rounded-xl mb-6 flex items-start gap-2.5 text-sm font-bold shadow-[2px_2px_0px_0px_#ef4444]"
+              className="bg-red-50 border-2 border-red-500 text-red-950 px-3.5 py-2.5 rounded-none mb-5 flex items-start gap-2 text-xs font-bold shadow-[2px_2px_0px_0px_#ef4444]"
             >
-              <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
               <span>{error}</span>
             </motion.div>
           )}
 
-          {/* Sign In Form */}
-          <form onSubmit={handleLogin}>
-            <FieldGroup className="flex flex-col gap-5">
-              
-              <Field className="flex flex-col gap-1.5">
-                <FieldLabel className="text-xs font-extrabold text-zinc-900 uppercase tracking-widest">
-                  Email Address
-                </FieldLabel>
-                <InputGroup className="bg-white border-2 border-zinc-900 focus-within:border-zinc-900 focus-within:ring-0 py-6 rounded-xl transition duration-200 shadow-[2px_2px_0px_0px_#18181b]">
-                  <InputGroupAddon align="inline-start" className="pl-4">
-                    <Mail className="w-4 h-4 text-zinc-500" />
-                  </InputGroupAddon>
-                  <InputGroupInput
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@company.com"
-                    className="text-zinc-900 placeholder-zinc-400 text-sm font-bold"
-                    required
-                  />
-                </InputGroup>
-              </Field>
-
-              <Field className="flex flex-col gap-1.5">
-                <FieldLabel className="text-xs font-extrabold text-zinc-900 uppercase tracking-widest">
-                  Password
-                </FieldLabel>
-                <InputGroup className="bg-white border-2 border-zinc-900 focus-within:border-zinc-900 focus-within:ring-0 py-6 rounded-xl transition duration-200 shadow-[2px_2px_0px_0px_#18181b]">
-                  <InputGroupAddon align="inline-start" className="pl-4">
-                    <Lock className="w-4 h-4 text-zinc-500" />
-                  </InputGroupAddon>
-                  <InputGroupInput
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="text-zinc-900 placeholder-zinc-400 text-sm font-bold"
-                    required
-                  />
-                </InputGroup>
-              </Field>
-
-              {/* Doodle Action Button */}
-              <Button
-                type="submit"
+          {/* Form */}
+          <form onSubmit={handleLogin} className="space-y-5">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-[10px] font-black text-zinc-950 uppercase tracking-widest">
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@company.com"
+                className="w-full bg-white border-2 border-black text-zinc-950 placeholder-zinc-400 text-xs font-bold px-4 py-3.5 rounded-none outline-none focus:bg-zinc-50/50 transition-all"
+                required
                 disabled={loading}
-                className="w-full py-6 bg-zinc-900 hover:bg-zinc-800 text-white font-extrabold text-lg text-center transition-all duration-200 rounded-xl flex items-center justify-center gap-2.5 shadow-[4px_4px_0px_0px_#475569] hover:translate-y-0.5 hover:shadow-[2px_2px_0px_0px_#475569] cursor-pointer border-2 border-zinc-900 mt-2 hover:text-white"
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin text-white" />
-                    <span>Signing in...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Sign In</span>
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
-              </Button>
-            </FieldGroup>
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <div className="flex justify-between items-center">
+                <label className="text-[10px] font-black text-zinc-950 uppercase tracking-widest">
+                  Password
+                </label>
+                <Link 
+                  href="/forgot-password" 
+                  className="text-[10px] font-bold text-zinc-400 hover:text-zinc-600 hover:underline transition-colors"
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full bg-white border-2 border-black text-zinc-950 placeholder-zinc-400 text-xs font-bold px-4 py-3.5 rounded-none outline-none focus:bg-zinc-50/50 transition-all"
+                required
+                disabled={loading}
+              />
+            </div>
+
+            {/* Action Button */}
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full py-6.5 bg-zinc-950 hover:bg-zinc-900 text-white font-extrabold text-sm text-center rounded-none flex items-center justify-center gap-2 border-2 border-black shadow-[4px_4px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-[0_0_0_0_#000] transition-all duration-200 cursor-pointer mt-4 hover:text-white"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                  <span>Signing in...</span>
+                </>
+              ) : (
+                <>
+                  <span>Sign In</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </Button>
           </form>
 
           {/* Toggle Screen Option */}
-          <p className="text-center text-zinc-600 mt-6 text-sm font-bold">
+          <p className="text-center text-zinc-400 mt-6.5 text-xs font-bold">
             Don't have an account?{' '}
-            <Link href="/signup" className="text-zinc-900 hover:underline font-extrabold transition">
+            <Link href="/signup" className="text-zinc-950 hover:underline font-extrabold transition-colors">
               Sign up
             </Link>
           </p>
-        </div>
+        </SpotlightCard>
       </motion.div>
     </div>
   );

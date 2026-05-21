@@ -2,50 +2,37 @@
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase-client';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Loader2, AlertCircle, ArrowRight } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Squares from '@/components/Squares';
 import SpotlightCard from '@/components/SpotlightCard';
 import ShinyText from '@/components/ShinyText';
 
-export default function SignupPage() {
-  const [fullName, setFullName] = useState('');
+export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
+  const [success, setSuccess] = useState(false);
   const supabase = createClient();
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleResetRequest = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     setLoading(true);
+    setError(null);
+    setSuccess(false);
 
     try {
-      const redirectOrigin = typeof window !== 'undefined' 
-        ? window.location.origin 
-        : (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000');
-
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${redirectOrigin}/auth/callback`,
-          data: {
-            full_name: fullName,
-          }
-        },
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/api/auth/callback?next=/update-password`,
       });
 
       if (error) throw error;
 
-      router.push('/login?message=Check your email to confirm your account');
+      setSuccess(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Signup failed');
+      setError(err instanceof Error ? err.message : 'Failed to send recovery email');
     } finally {
       setLoading(false);
     }
@@ -84,12 +71,24 @@ export default function SignupPage() {
               <span className="text-black font-medium">.ai</span>
             </Link>
             <h2 className="text-2xl font-extrabold tracking-tight text-zinc-950 mt-1 font-display select-none">
-              Create an account
+              Recover password
             </h2>
             <p className="text-zinc-500 text-xs font-bold mt-1.5 leading-relaxed max-w-[280px]">
-              Join the next generation of scientific rigor.
+              Enter your email address and we'll send you a password recovery link.
             </p>
           </div>
+
+          {/* Success Banner */}
+          {success && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-emerald-50 border-2 border-emerald-500 text-emerald-950 px-3.5 py-2.5 rounded-none mb-5 flex items-start gap-2 text-xs font-bold shadow-[2px_2px_0px_0px_#10b981]"
+            >
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+              <span>Recovery link sent! Please check your email inbox to proceed.</span>
+            </motion.div>
+          )}
 
           {/* Error Banner */}
           {error && (
@@ -104,22 +103,7 @@ export default function SignupPage() {
           )}
 
           {/* Form */}
-          <form onSubmit={handleSignup} className="space-y-5">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-black text-zinc-950 uppercase tracking-widest">
-                Full Name
-              </label>
-              <input
-                type="text"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="John Doe"
-                className="w-full bg-white border-2 border-black text-zinc-950 placeholder-zinc-400 text-xs font-bold px-4 py-3.5 rounded-none outline-none focus:bg-zinc-50/50 transition-all"
-                required
-                disabled={loading}
-              />
-            </div>
-
+          <form onSubmit={handleResetRequest} className="space-y-5">
             <div className="flex flex-col gap-1.5">
               <label className="text-[10px] font-black text-zinc-950 uppercase tracking-widest">
                 Email Address
@@ -128,22 +112,7 @@ export default function SignupPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="name@resolve.ai"
-                className="w-full bg-white border-2 border-black text-zinc-950 placeholder-zinc-400 text-xs font-bold px-4 py-3.5 rounded-none outline-none focus:bg-zinc-50/50 transition-all"
-                required
-                disabled={loading}
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-black text-zinc-950 uppercase tracking-widest">
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="name@company.com"
                 className="w-full bg-white border-2 border-black text-zinc-950 placeholder-zinc-400 text-xs font-bold px-4 py-3.5 rounded-none outline-none focus:bg-zinc-50/50 transition-all"
                 required
                 disabled={loading}
@@ -159,22 +128,21 @@ export default function SignupPage() {
               {loading ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-white" />
-                  <span>Creating account...</span>
+                  <span>Sending link...</span>
                 </>
               ) : (
                 <>
-                  <span>Sign Up</span>
+                  <span>Send Recovery Link</span>
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
             </Button>
           </form>
 
-          {/* Toggle Screen Option */}
           <p className="text-center text-zinc-400 mt-6.5 text-xs font-bold">
-            Already have an account?{' '}
+            Remembered your password?{' '}
             <Link href="/login" className="text-zinc-950 hover:underline font-extrabold transition-colors">
-              Sign in
+              Sign In
             </Link>
           </p>
         </SpotlightCard>

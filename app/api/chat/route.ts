@@ -1,6 +1,7 @@
 import { createServerSupabaseClient } from '@/lib/supabase-server';
 import { assembleConversation, buildOpenAIMessages } from '@/lib/conversation-context';
 import OpenAI from 'openai';
+import { getWebContext } from '@/lib/firecrawl';
 
 // Exponential backoff with jitter for rate limit handling
 async function sleep(ms: number) {
@@ -52,6 +53,58 @@ const openai = new OpenAI({
   },
 });
 
+interface Attachment {
+  name: string;
+  type: string;
+  size: number;
+  base64Data: string;
+}
+
+function processMessageAttachments(content: string): { cleanedText: string; extractedContext: string } {
+  const attachmentRegex = /\[ATTACHMENT_START\]([\s\S]*?)\[ATTACHMENT_END\]/;
+  const match = content.match(attachmentRegex);
+  const cleanedText = content.replace(attachmentRegex, '').trim();
+  let extractedContext = '';
+
+  if (match) {
+    try {
+      const attachments: Attachment[] = JSON.parse(match[1]);
+      attachments.forEach((file) => {
+        const isText = 
+          file.type.startsWith('text/') ||
+          file.name.endsWith('.txt') ||
+          file.name.endsWith('.js') ||
+          file.name.endsWith('.ts') ||
+          file.name.endsWith('.tsx') ||
+          file.name.endsWith('.py') ||
+          file.name.endsWith('.json') ||
+          file.name.endsWith('.csv') ||
+          file.name.endsWith('.md') ||
+          file.name.endsWith('.css') ||
+          file.name.endsWith('.html') ||
+          file.name.endsWith('.svg');
+
+        if (isText && file.base64Data.includes('base64,')) {
+          try {
+            const base64Content = file.base64Data.split('base64,')[1];
+            const decodedText = Buffer.from(base64Content, 'base64').toString('utf-8');
+            
+            extractedContext += `\n\n---\n[File Attached: ${file.name}]\n\`\`\`\n${decodedText}\n\`\`\`\n---`;
+          } catch (decodeErr) {
+            console.error(`Failed to decode file ${file.name}:`, decodeErr);
+          }
+        } else {
+          extractedContext += `\n\n---\n[File Attached: ${file.name} (Binary/Image - Size: ${(file.size / 1024).toFixed(1)} KB)]\n---`;
+        }
+      });
+    } catch (e) {
+      console.error('Failed to parse attachments in API route', e);
+    }
+  }
+
+  return { cleanedText, extractedContext };
+}
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -65,7 +118,7 @@ export async function POST(request: Request) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
 
-    // Save user message to DB
+    // Save user message to DB (preserving original base64 tags for reloading)
     await supabase.from('messages').insert({
       session_id,
       user_id: user.id,
@@ -73,6 +126,9 @@ export async function POST(request: Request) {
       content: message,
       tokens_used: 0,
     });
+
+    // Parse current message attachments
+    const { cleanedText: currentCleaned, extractedContext: currentExtracted } = processMessageAttachments(message);
 
     // Fetch conversation context (last 10 messages)
     const { data: history } = await supabase
@@ -82,16 +138,74 @@ export async function POST(request: Request) {
       .order('created_at', { ascending: true })
       .limit(10);
 
+    // Clean up history messages to prevent massive base64 blocks from inflating context
+    const cleanedHistory = (history || []).map((msg: any) => {
+      if (msg.role === 'user') {
+        const { cleanedText } = processMessageAttachments(msg.content);
+        const attachmentRegex = /\[ATTACHMENT_START\]([\s\S]*?)\[ATTACHMENT_END\]/;
+        const hasAttachments = msg.content.match(attachmentRegex);
+        let historyText = cleanedText;
+        if (hasAttachments) {
+          try {
+            const attachments: Attachment[] = JSON.parse(hasAttachments[1]);
+            const names = attachments.map(a => a.name).join(', ');
+            historyText += `\n\n[Attachments in history: ${names}]`;
+          } catch {
+            historyText += `\n\n[Attachments in history]`;
+          }
+        }
+        return { ...msg, content: historyText };
+      }
+      return msg;
+    });
+
+    // Fetch live web context using Firecrawl if search intent matches
+    let webContext = null;
+    try {
+      webContext = await getWebContext(currentCleaned);
+    } catch (e) {
+      console.error('Error fetching web context from Firecrawl in API route:', e);
+    }
+
     let systemInstruction = `You are a helpful, highly intelligent, general-purpose AI assistant named Resolv.ai.
     You answer user questions accurately, engagingly, and concisely.
 
     Answer directly and concisely.
     For simple factual questions, give the exact answer in one short sentence.
-    Do not introduce yourself, do not ask how you can help, and do not answer with a table unless the user explicitly asks for one.
-    Do not add system tags or prefixes.`;
+    Do not introduce yourself, do not ask how you can help.
+    Do not add system tags or prefixes.
+
+    DATA VISUALIZATION & FLOWCHARTS:
+    1. If comparing historical stock prices, market trends, financial statistics, or competitor percentages, you MUST represent this data visually using a custom chart block with the exact structure below. Do not use tables; use this JSON chart format instead:
+       \`\`\`chart
+       {
+         "type": "bar" | "line" | "donut",
+         "title": "Short Descriptive Title",
+         "labels": ["Label A", "Label B", "Label C"],
+         "datasets": [
+           {
+             "label": "Accompanying Unit Label",
+             "data": [valueA, valueB, valueC]
+           }
+         ]
+       }
+       \`\`\`
+       Choose "line" for sequential trends, "bar" for item comparisons, and "donut" for share/percentage distribution of assets. Ensure the JSON is perfectly valid and is wrapped in the \`\`\`chart ... \`\`\` code block.
+
+    2. If describing workflows, sequential steps, architectural systems, or scraper cycles, you MUST output a standard Mermaid diagram block:
+       \`\`\`mermaid
+       graph TD
+       A[Start] --> B[Next Step]
+       \`\`\`
+       Ensure the block starts with \`\`\`mermaid.`;
+
+    if (webContext) {
+      systemInstruction = `${systemInstruction}\n\n${webContext.context}`;
+    }
 
     // Assemble conversation with guaranteed order: system → history → current
-    const assembled = assembleConversation(systemInstruction, history || [], message);
+    const currentPrompt = currentCleaned + currentExtracted;
+    const assembled = assembleConversation(systemInstruction, cleanedHistory, currentPrompt);
     const conversationMessages = buildOpenAIMessages(assembled);
 
     // ── Streaming with retry logic for rate limits ────────────────────────────
@@ -158,6 +272,21 @@ export async function POST(request: Request) {
             if (chunk.usage) {
               tokensUsed = chunk.usage.total_tokens ?? 0;
             }
+          }
+
+          // If we had web context sources, append them to the stream and fullText at the end
+          if (webContext && webContext.sources && webContext.sources.length > 0) {
+            const sourcesTitle = `\n\n---\n### 🌐 Sources Reviewed\n`;
+            let sourcesList = '';
+            webContext.sources.forEach(source => {
+              sourcesList += `- [${source.title}](${source.url})\n`;
+            });
+            
+            const citationBlock = `${sourcesTitle}${sourcesList}`;
+            fullText += citationBlock;
+            
+            // Stream the citation block to the client so it renders immediately
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta: citationBlock })}\n\n`));
           }
         } catch (err) {
           controller.error(err);

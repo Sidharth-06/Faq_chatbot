@@ -3,10 +3,10 @@
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase-client';
 import { Sparkles, User, Sliders, Loader2, ShieldCheck } from 'lucide-react';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import SpotlightCard from '@/components/SpotlightCard';
+import ShinyText from '@/components/ShinyText';
 import toast from 'react-hot-toast';
 
 export default function SettingsPage() {
@@ -55,25 +55,30 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="min-h-full bg-zinc-50 p-6 lg:p-8 relative font-sans selection:bg-zinc-900 selection:text-white">
+    <div className="min-h-full bg-brand-cream text-zinc-950 p-6 lg:p-8 relative font-sans select-none overflow-hidden">
+      
+      {/* Subtle decorative dot grid background matching the dashboard style */}
+      <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:12px_12px] pointer-events-none z-0" />
+
       <div className="max-w-4xl mx-auto flex flex-col gap-6 relative z-10">
         
         {/* Header */}
         <div className="flex flex-col items-start">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-semibold mb-3">
-            <Sparkles className="w-3.5 h-3.5" /> Resolv.ai Control Center
+          <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 border-2 border-black bg-brand-cream text-brand-red text-xs font-black shadow-[3px_3px_0px_0px_#000] mb-4">
+            <Sparkles className="w-3.5 h-3.5 text-brand-red shrink-0" /> 
+            <span>Resolv.ai Control Center</span>
           </div>
-          <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">
+          <h1 className="text-3xl font-black text-zinc-950 tracking-tight font-display">
             Workspace Settings
           </h1>
-          <p className="text-xs md:text-sm text-zinc-500 mt-1 max-w-xl font-medium">
+          <p className="text-xs md:text-sm text-zinc-500 mt-1 max-w-xl font-bold">
             Manage your account preferences and configure assistant response settings.
           </p>
         </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-24">
-            <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-brand-red" />
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -82,45 +87,45 @@ export default function SettingsPage() {
             <div className="flex flex-col gap-6">
               
               {/* Account Card */}
-              <Card className="bg-white border border-zinc-200 p-5 rounded-xl shadow-xs">
-                <h3 className="text-base font-semibold text-zinc-900 flex items-center gap-2 mb-4 border-b border-zinc-100 pb-2.5">
-                  <User className="w-4.5 h-4.5 text-indigo-500" />
+              <SpotlightCard className="bg-white border-2 border-black p-6 shadow-[8px_8px_0px_0px_#000] rounded-none relative overflow-hidden transition-all duration-300 hover:shadow-[10px_10px_0px_0px_#000] w-full">
+                <h3 className="text-base font-black text-zinc-950 flex items-center gap-2 mb-4 border-b-2 border-black pb-2.5">
+                  <User className="w-4.5 h-4.5 text-brand-red" />
                   <span>Account Profile</span>
                 </h3>
                 
-                <div className="flex flex-col gap-3 text-sm text-zinc-600 font-medium">
+                <div className="flex flex-col gap-3 text-sm text-zinc-600 font-bold">
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-[10px] text-zinc-400 uppercase tracking-wider font-mono">Email Address</span>
-                    <span className="text-zinc-800 font-semibold">{email || 'Not authenticated'}</span>
+                    <span className="text-[10px] text-zinc-400 uppercase tracking-widest font-black font-mono">Email Address</span>
+                    <span className="text-zinc-900 font-extrabold">{email || 'Not authenticated'}</span>
                   </div>
                   <div className="flex flex-col gap-0.5 mt-2">
-                    <span className="text-[10px] text-zinc-400 uppercase tracking-wider font-mono">Workspace Role</span>
+                    <span className="text-[10px] text-zinc-400 uppercase tracking-widest font-black font-mono">Workspace Role</span>
                     <div className="flex items-center mt-1">
-                      <Badge className="bg-emerald-50 border border-emerald-100 text-emerald-800 font-semibold text-[10px] py-0.5 px-2.5 flex items-center gap-1 rounded-full">
+                      <Badge className="bg-emerald-50 border-2 border-emerald-500 text-emerald-950 font-bold text-[10px] py-1 px-3 flex items-center gap-1 rounded-none shadow-[2px_2px_0px_0px_#10b981]">
                         <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                         Workspace Administrator
                       </Badge>
                     </div>
                   </div>
                 </div>
-              </Card>
+              </SpotlightCard>
 
               {/* Preferences Card */}
-              <Card className="bg-white border border-zinc-200 p-5 rounded-xl shadow-xs">
-                <h3 className="text-base font-semibold text-zinc-900 flex items-center gap-2 mb-4 border-b border-zinc-100 pb-2.5">
-                  <Sliders className="w-4.5 h-4.5 text-indigo-500" />
+              <SpotlightCard className="bg-white border-2 border-black p-6 shadow-[8px_8px_0px_0px_#000] rounded-none relative overflow-hidden transition-all duration-300 hover:shadow-[10px_10px_0px_0px_#000] w-full">
+                <h3 className="text-base font-black text-zinc-950 flex items-center gap-2 mb-4 border-b-2 border-black pb-2.5">
+                  <Sliders className="w-4.5 h-4.5 text-brand-red" />
                   <span>AI Engine Configurations</span>
                 </h3>
 
-                <div className="flex flex-col gap-4 font-medium text-zinc-700">
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                <div className="flex flex-col gap-4 font-bold text-zinc-700">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-black text-zinc-950 uppercase tracking-widest">
                       LLM Temperature (Creativity)
                     </label>
                     <select
                       value={llmTemp}
                       onChange={(e) => setLlmTemp(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-zinc-800 text-sm shadow-xs"
+                      className="w-full bg-white border-2 border-black text-zinc-950 text-xs font-bold px-4 py-3.5 rounded-none outline-none focus:bg-zinc-50/50 transition-all shadow-[2px_2px_0_0_#000] focus:shadow-[4px_4px_0_0_#000]"
                     >
                       <option value="deterministic">Deterministic (0.0 - Highly precise)</option>
                       <option value="balanced">Balanced (0.7 - Recommended)</option>
@@ -128,14 +133,14 @@ export default function SettingsPage() {
                     </select>
                   </div>
 
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-[10px] font-black text-zinc-950 uppercase tracking-widest">
                       Max Output Length
                     </label>
                     <select
                       value={maxTokens}
                       onChange={(e) => setMaxTokens(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-zinc-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-zinc-800 text-sm shadow-xs"
+                      className="w-full bg-white border-2 border-black text-zinc-950 text-xs font-bold px-4 py-3.5 rounded-none outline-none focus:bg-zinc-50/50 transition-all shadow-[2px_2px_0_0_#000] focus:shadow-[4px_4px_0_0_#000]"
                     >
                       <option value="150">Short replies (150 tokens)</option>
                       <option value="300">Standard summary (300 tokens)</option>
@@ -146,13 +151,21 @@ export default function SettingsPage() {
                   <Button
                     onClick={handleSavePreferences}
                     disabled={saving}
-                    className="w-full py-4.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm rounded-lg transition duration-150 shadow-sm cursor-pointer mt-2 hover:text-white"
+                    className="w-full py-6.5 bg-zinc-950 hover:bg-zinc-900 text-white font-extrabold text-sm text-center rounded-none flex items-center justify-center gap-2 border-2 border-black shadow-[4px_4px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[2px_2px_0px_0px_#000] active:translate-x-[4px] active:translate-y-[4px] active:shadow-[0_0_0_0_#000] transition-all duration-200 cursor-pointer mt-4 hover:text-white"
                   >
-                    {saving && <Loader2 className="w-4 h-4 animate-spin text-white" />}
-                    <span>Save AI Configurations</span>
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-white" />
+                        <span>Saving Preferences...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Save AI Configurations</span>
+                      </>
+                    )}
                   </Button>
                 </div>
-              </Card>
+              </SpotlightCard>
 
             </div>
 
@@ -160,24 +173,25 @@ export default function SettingsPage() {
             <div className="flex flex-col gap-6">
               
               {/* Brand Card */}
-              <Card className="bg-zinc-950 border border-zinc-850 p-5 rounded-xl shadow-md text-zinc-200">
+              <SpotlightCard className="bg-zinc-950 border-2 border-black p-6 shadow-[8px_8px_0px_0px_#000] rounded-none relative overflow-hidden transition-all duration-300 hover:shadow-[10px_10px_0px_0px_#000] w-full text-zinc-200">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-md select-none">
-                    <Sparkles className="w-4.5 h-4.5 text-white" />
+                  <div className="w-8 h-8 border-2 border-black bg-brand-red flex items-center justify-center shadow-[2px_2px_0px_0px_#000] select-none">
+                    <Sparkles className="w-4.5 h-4.5 text-white animate-pulse" />
                   </div>
-                  <span className="font-bold text-lg tracking-tight text-white font-display">
-                    Resolv<span className="text-indigo-400">.ai</span>
+                  <span className="font-extrabold text-lg tracking-tight text-white font-display">
+                    <span className="text-brand-red">Resolv</span>
+                    <span className="text-zinc-400 font-medium">.ai</span>
                   </span>
                 </div>
 
-                <p className="text-xs text-zinc-400 leading-relaxed font-medium">
+                <p className="text-xs text-zinc-400 leading-relaxed font-bold">
                   Resolv.ai is an intelligent, high-performance assistant for fast, reliable answers and productive conversations.
                 </p>
-                <div className="mt-6 pt-3 border-t border-zinc-900 text-[10px] font-semibold text-zinc-600 flex justify-between font-mono">
+                <div className="mt-6 pt-3 border-t border-zinc-900 text-[10px] font-black text-zinc-500 flex justify-between font-mono">
                   <span>Engine Version: 1.2.0</span>
                   <span>© {new Date().getFullYear()} Resolv.ai</span>
                 </div>
-              </Card>
+              </SpotlightCard>
 
             </div>
 

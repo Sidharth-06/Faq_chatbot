@@ -142,23 +142,22 @@ export default function ChatPage() {
       created_at: new Date().toISOString(),
     };
 
+    // If this is the first message and no title was generated yet, generate one
+    if (messages.length === 0 && !titleGeneratedRef.current) {
+      titleGeneratedRef.current = true;
+      const generatedTitle = generateChatTitle(content);
+      // Dispatch event immediately so sidebar updates
+      window.dispatchEvent(new CustomEvent('sessionTitleUpdated', {
+        detail: { sessionId, title: generatedTitle }
+      }));
+      // Update DB in background
+      updateSessionTitle(sessionId, generatedTitle, supabase).catch(console.error);
+    }
+
     setMessages((prev) => {
       if (prev.some((m) => m.id === STREAMING_ID)) {
         return prev;
       }
-
-      // If this is the first message and no title was generated yet, generate one
-      if (prev.length === 0 && !titleGeneratedRef.current) {
-        titleGeneratedRef.current = true;
-        const generatedTitle = generateChatTitle(content);
-        // Dispatch event immediately so sidebar updates
-        window.dispatchEvent(new CustomEvent('sessionTitleUpdated', {
-          detail: { sessionId, title: generatedTitle }
-        }));
-        // Update DB in background
-        updateSessionTitle(sessionId, generatedTitle, supabase).catch(console.error);
-      }
-
       return [...prev, userMessage, placeholder];
     });
 
@@ -278,7 +277,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#fdf6f2]">
+    <div className="flex flex-col h-full bg-white">
       {loading ? (
         <div className="flex-1 flex items-center justify-center">
           <div className="flex flex-col items-center gap-3">
