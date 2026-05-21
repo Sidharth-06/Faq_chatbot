@@ -11,12 +11,32 @@ import { Loader2 } from 'lucide-react';
 
 const STREAMING_ID = '__streaming__';
 
+const POPULAR_MODELS = [
+  { id: 'google/gemini-2.5-flash:free', name: 'Gemini 2.5 Flash' },
+  { id: 'google/gemini-2.5-pro:free', name: 'Gemini 2.5 Pro' },
+  { id: 'deepseek/deepseek-r1:free', name: 'DeepSeek R1' },
+  { id: 'meta-llama/llama-3.3-70b-instruct:free', name: 'Llama 3.3 70B' },
+  { id: 'qwen/qwen-2.5-72b-instruct:free', name: 'Qwen 2.5 72B' },
+  { id: 'mistralai/mistral-7b-instruct:free', name: 'Mistral 7B' },
+  { id: 'microsoft/phi-3-medium-128k-instruct:free', name: 'Phi-3 Medium' },
+];
+
+const DEFAULT_MODELS = [
+  'google/gemini-2.5-flash:free',
+  'google/gemini-2.5-pro:free',
+  'deepseek/deepseek-r1:free',
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'qwen/qwen-2.5-72b-instruct:free',
+];
+
 export default function ChatPage() {
   const params = useParams();
   const sessionId = params?.sessionId as string;
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(!!sessionId);
   const [sending, setSending] = useState(false);
+  const [availableModels, setAvailableModels] = useState<{ id: string; name: string }[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>('google/gemini-2.5-flash:free');
   const supabase = createClient();
 
   // Track if we've already generated a title for this session
@@ -25,6 +45,47 @@ export default function ChatPage() {
   // While streaming is in flight, suppress real-time assistant inserts
   const isStreamingRef = useRef(false);
   const sendLockRef = useRef(false);
+
+  useEffect(() => {
+    // Load custom models
+    const savedModelsRaw = localStorage.getItem('resolv_custom_models');
+    let loadedModelIds: string[] = DEFAULT_MODELS;
+    
+    if (savedModelsRaw) {
+      try {
+        const parsed = JSON.parse(savedModelsRaw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          loadedModelIds = parsed;
+        }
+      } catch (e) {
+        console.error('Error parsing custom models:', e);
+      }
+    }
+    
+    // Map to full model info
+    const modelsMapped = loadedModelIds.map(id => {
+      const match = POPULAR_MODELS.find(pm => pm.id === id);
+      return {
+        id,
+        name: match ? match.name : id.split('/').pop()?.split(':')[0]?.toUpperCase() || id
+      };
+    });
+    setAvailableModels(modelsMapped);
+
+    // Load active model selection
+    const activeModel = localStorage.getItem('resolv_selected_model');
+    if (activeModel && loadedModelIds.includes(activeModel)) {
+      setSelectedModel(activeModel);
+    } else {
+      setSelectedModel(loadedModelIds[0]);
+      localStorage.setItem('resolv_selected_model', loadedModelIds[0]);
+    }
+  }, []);
+
+  const handleModelChange = (newModel: string) => {
+    setSelectedModel(newModel);
+    localStorage.setItem('resolv_selected_model', newModel);
+  };
 
   useEffect(() => {
     if (!sessionId) return;
@@ -289,6 +350,33 @@ export default function ChatPage() {
         </div>
       ) : (
         <>
+          {/* Neo-brutalist Model Selector Header */}
+          <div className="border-b-2 border-black bg-brand-cream px-6 py-3 flex flex-row justify-between items-center gap-3 relative z-20 shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-brand-red border border-black animate-pulse shrink-0" />
+              <h2 className="text-xs font-black tracking-widest uppercase text-zinc-950 font-mono">
+                Active Session
+              </h2>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <label className="text-[10px] font-black text-zinc-500 uppercase tracking-widest font-mono">
+                Model:
+              </label>
+              <select
+                value={selectedModel}
+                onChange={(e) => handleModelChange(e.target.value)}
+                className="bg-white border-2 border-black text-zinc-950 text-xs font-bold px-3 py-1.5 rounded-none outline-none shadow-[2px_2px_0px_0px_#000] focus:shadow-[3px_3px_0px_0px_#000] transition-all hover:bg-zinc-50 cursor-pointer"
+              >
+                {availableModels.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <ChatWindow messages={messages} />
           <MessageInput onSendMessage={handleSendMessage} disabled={sending} />
         </>

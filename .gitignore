@@ -1,8 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
-/node_modules
-/.pnp
+node_modules/
+.pnp/
 .pnp.*
 .yarn/*
 !.yarn/patches
@@ -11,14 +11,14 @@
 !.yarn/versions
 
 # testing
-/coverage
+coverage/
 
 # next.js
-/.next/
-/out/
+.next/
+out/
 
 # production
-/build
+build/
 
 # misc
 .DS_Store
@@ -45,3 +45,16 @@ test_*.mjs
 check_*.mjs
 inspect_*.mjs
 list_*.mjs
+
+.vercel
+.env*.local
+
+# markdown files
+*.md
+**/*.md
+
+# test files and directories
+__tests__/
+**/__tests__/
+*.test.*
+*.spec.*
