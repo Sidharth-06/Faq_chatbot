@@ -108,24 +108,20 @@ export default function ChatDefaultPage() {
           {starterPrompts.map((prompt, idx) => (
             <SpotlightCard
               key={idx}
-              className="bg-white border border-black rounded-none shadow-[2px_2px_0_0_#000] hover:translate-y-[-1px] hover:shadow-[3px_3px_0_0_#000] transition-all duration-150 group cursor-pointer"
+              onClick={() => handlePromptClick(prompt.text)}
+              className="bg-white border border-black rounded-none shadow-[2px_2px_0_0_#000] hover:translate-y-[-1px] hover:shadow-[3px_3px_0_0_#000] transition-all duration-150 group cursor-pointer p-5 flex flex-col justify-between select-none"
             >
-              <button
-                onClick={() => handlePromptClick(prompt.text)}
-                className="w-full h-full p-5 text-left flex flex-col justify-between bg-transparent outline-none focus:outline-none cursor-pointer"
-              >
-                <div>
-                  <span className="text-[8px] font-black text-brand-red uppercase tracking-widest block mb-2 font-mono">
-                    {prompt.category}
-                  </span>
-                  <h4 className="font-black text-xs text-zinc-900 group-hover:text-brand-red uppercase tracking-wider transition mb-1.5">
-                    {prompt.title}
-                  </h4>
-                  <p className="text-zinc-500 text-[10px] leading-relaxed font-bold tracking-wide">
-                    "{prompt.text}"
-                  </p>
-                </div>
-              </button>
+              <div>
+                <span className="text-[8px] font-black text-brand-red uppercase tracking-widest block mb-2 font-mono">
+                  {prompt.category}
+                </span>
+                <h4 className="font-black text-xs text-zinc-900 group-hover:text-brand-red uppercase tracking-wider transition mb-1.5">
+                  {prompt.title}
+                </h4>
+                <p className="text-zinc-500 text-[10px] leading-relaxed font-bold tracking-wide">
+                  "{prompt.text}"
+                </p>
+              </div>
             </SpotlightCard>
           ))}
         </div>

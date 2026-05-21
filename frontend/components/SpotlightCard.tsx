@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 
-interface SpotlightCardProps {
+interface SpotlightCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
   spotlightColor?: string;
@@ -12,6 +12,7 @@ export default function SpotlightCard({
   children,
   className = '',
   spotlightColor = 'rgba(168, 44, 36, 0.08)', // High-fidelity soft brand-red transparent spotlight
+  ...props
 }: SpotlightCardProps) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -44,6 +45,7 @@ export default function SpotlightCard({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       className={`relative overflow-hidden ${className}`}
+      {...props}
     >
       {/* Dynamic spotlight hover overlay */}
       <div
