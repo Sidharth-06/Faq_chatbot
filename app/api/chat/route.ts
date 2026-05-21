@@ -1,10 +1,7 @@
-import { Router, Response } from 'express';
-import { requireAuth, AuthenticatedRequest } from '../middleware/auth';
+import { createServerSupabaseClient } from '@/lib/supabase-server';
+import { assembleConversation, buildOpenAIMessages } from '@/lib/conversation-context';
 import OpenAI from 'openai';
-import { getWebContext } from '../lib/firecrawl';
-import { assembleConversation, buildOpenAIMessages } from '../lib/conversation-context';
-
-const router = Router();
+import { getWebContext } from '@/lib/firecrawl';
 
 // Exponential backoff with jitter for rate limit handling
 async function sleep(ms: number) {
@@ -45,6 +42,9 @@ async function withRetry<T>(
 
   throw lastError;
 }
+
+
+
 
 interface Attachment {
   name: string;
@@ -98,8 +98,8 @@ function processMessageAttachments(content: string): { cleanedText: string; extr
   return { cleanedText, extractedContext };
 }
 
-// POST /api/chat
-router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response) => {
+export async function POST(request: Request) {
+  // Lazy-init: client created inside handler so missing env vars don't crash build
   const openai = new OpenAI({
     baseURL: 'https://openrouter.ai/api/v1',
     apiKey: process.env.OPENROUTER_API_KEY ?? '',
@@ -110,20 +110,16 @@ router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =
   });
 
   try {
-    const { session_id, message, model = 'openai/gpt-oss-20b:free' } = req.body;
-    const supabase = req.supabase;
-    const user = req.user;
+    const body = await request.json();
+    const { session_id, message, model = 'openai/gpt-oss-20b:free' } = body;
 
-    if (!session_id || !message) {
-      return res.status(400).json({ error: 'Missing session_id or message' });
+    const supabase = await createServerSupabaseClient();
+
+    // Authenticate
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
-
-    // Set headers for Server-Sent Events (SSE) streaming
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-    });
 
     // Save user message to DB (preserving original base64 tags for reloading)
     await supabase.from('messages').insert({
@@ -137,7 +133,7 @@ router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =
     // Parse current message attachments
     const { cleanedText: currentCleaned, extractedContext: currentExtracted } = processMessageAttachments(message);
 
-    // Fetch conversation history (last 10 messages)
+    // Fetch conversation context (last 10 messages)
     const { data: history } = await supabase
       .from('messages')
       .select('*')
@@ -236,92 +232,133 @@ router.post('/', requireAuth, async (req: AuthenticatedRequest, res: Response) =
     let fullText = '';
     let tokensUsed = 0;
     let reasoning_details: any = undefined;
+    const readable = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder();
+        try {
+          for await (const chunk of stream) {
+            const delta = chunk.choices[0]?.delta?.content ?? '';
+            if (delta) {
+              fullText += delta;
+              // Send each chunk as a plain text SSE data line
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta })}\n\n`));
+            }
 
-    for await (const chunk of stream) {
-      const delta = chunk.choices[0]?.delta?.content ?? '';
-      if (delta) {
-        fullText += delta;
-        res.write(`data: ${JSON.stringify({ delta })}\n\n`);
-      }
+            // Capture reasoning deltas
+            const rawDelta = chunk.choices[0]?.delta as any;
+            if (rawDelta?.reasoning_details) {
+              if (Array.isArray(rawDelta.reasoning_details)) {
+                if (!reasoning_details) reasoning_details = [];
+                reasoning_details.push(...rawDelta.reasoning_details);
+              } else if (typeof rawDelta.reasoning_details === 'object') {
+                if (!reasoning_details) reasoning_details = {};
+                reasoning_details = { ...reasoning_details, ...rawDelta.reasoning_details };
+              } else {
+                reasoning_details = rawDelta.reasoning_details;
+              }
+            } else if (rawDelta?.reasoning) {
+              if (typeof rawDelta.reasoning === 'string') {
+                if (typeof reasoning_details !== 'string') reasoning_details = '';
+                reasoning_details += rawDelta.reasoning;
+              } else {
+                reasoning_details = rawDelta.reasoning;
+              }
+            } else if (rawDelta?.reasoning_content) {
+              if (typeof rawDelta.reasoning_content === 'string') {
+                if (typeof reasoning_details !== 'string') reasoning_details = '';
+                reasoning_details += rawDelta.reasoning_content;
+              } else {
+                reasoning_details = rawDelta.reasoning_content;
+              }
+            }
 
-      // Capture reasoning deltas
-      const rawDelta = chunk.choices[0]?.delta as any;
-      if (rawDelta?.reasoning_details) {
-        if (Array.isArray(rawDelta.reasoning_details)) {
-          if (!reasoning_details) reasoning_details = [];
-          reasoning_details.push(...rawDelta.reasoning_details);
-        } else if (typeof rawDelta.reasoning_details === 'object') {
-          if (!reasoning_details) reasoning_details = {};
-          reasoning_details = { ...reasoning_details, ...rawDelta.reasoning_details };
-        } else {
-          reasoning_details = rawDelta.reasoning_details;
+            if (chunk.usage) {
+              tokensUsed = chunk.usage.total_tokens ?? 0;
+            }
+          }
+
+          // If we had web context sources, append them to the stream and fullText at the end
+          if (webContext && webContext.sources && webContext.sources.length > 0) {
+            const sourcesTitle = `\n\n---\n### 🌐 Sources Reviewed\n`;
+            let sourcesList = '';
+            webContext.sources.forEach(source => {
+              sourcesList += `- [${source.title}](${source.url})\n`;
+            });
+            
+            const citationBlock = `${sourcesTitle}${sourcesList}`;
+            fullText += citationBlock;
+            
+            // Stream the citation block to the client so it renders immediately
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta: citationBlock })}\n\n`));
+          }
+        } catch (err) {
+          controller.error(err);
+          return;
         }
-      } else if (rawDelta?.reasoning) {
-        if (typeof rawDelta.reasoning === 'string') {
-          if (typeof reasoning_details !== 'string') reasoning_details = '';
-          reasoning_details += rawDelta.reasoning;
-        } else {
-          reasoning_details = rawDelta.reasoning;
+
+        // Append reasoning details block if we successfully captured it
+        let persistedText = fullText;
+        if (reasoning_details !== undefined) {
+          persistedText = `${fullText}\n\n<!-- REASONING_DETAILS:\n${JSON.stringify(reasoning_details)}\n-->`;
         }
-      } else if (rawDelta?.reasoning_content) {
-        if (typeof rawDelta.reasoning_content === 'string') {
-          if (typeof reasoning_details !== 'string') reasoning_details = '';
-          reasoning_details += rawDelta.reasoning_content;
-        } else {
-          reasoning_details = rawDelta.reasoning_content;
-        }
-      }
 
-      if (chunk.usage) {
-        tokensUsed = chunk.usage.total_tokens ?? 0;
-      }
-    }
+        // Send the final message so the client knows the prefix & can persist
+        controller.enqueue(
+          encoder.encode(`data: ${JSON.stringify({ done: true, fullText, tokens: tokensUsed })}\n\n`)
+        );
+        controller.close();
 
-    // If we had web context sources, append them to the stream and fullText at the end
-    if (webContext && webContext.sources && webContext.sources.length > 0) {
-      const sourcesTitle = `\n\n---\n### 🌐 Sources Reviewed\n`;
-      let sourcesList = '';
-      webContext.sources.forEach(source => {
-        sourcesList += `- [${source.title}](${source.url})\n`;
-      });
-      
-      const citationBlock = `${sourcesTitle}${sourcesList}`;
-      fullText += citationBlock;
-      res.write(`data: ${JSON.stringify({ delta: citationBlock })}\n\n`);
-    }
+        // Persist the complete assistant message to Supabase
+        await supabase.from('messages').insert({
+          session_id,
+          user_id: user.id,
+          role: 'assistant',
+          content: persistedText,
+          tokens_used: tokensUsed,
+        });
 
-    // Append reasoning details block if we successfully captured it
-    let persistedText = fullText;
-    if (reasoning_details !== undefined) {
-      persistedText = `${fullText}\n\n<!-- REASONING_DETAILS:\n${JSON.stringify(reasoning_details)}\n-->`;
-    }
-
-    // Send final payload
-    res.write(`data: ${JSON.stringify({ done: true, fullText, tokens: tokensUsed })}\n\n`);
-    res.end();
-
-    // Persist the complete assistant message to Supabase
-    await supabase.from('messages').insert({
-      session_id,
-      user_id: user.id,
-      role: 'assistant',
-      content: persistedText,
-      tokens_used: tokensUsed,
+        // Update session timestamp
+        await supabase
+          .from('sessions')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', session_id);
+      },
     });
 
-    // Update session timestamp
-    await supabase
-      .from('sessions')
-      .update({ updated_at: new Date().toISOString() })
-      .eq('id', session_id);
-
-  } catch (error: any) {
+    return new Response(readable, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
+      },
+    });
+  } catch (error) {
     console.error('Chat API error:', error);
-    
-    // Express streaming error handling (write error chunk and close connection)
-    res.write(`data: ${JSON.stringify({ error: error.message || 'Internal server error' })}\n\n`);
-    res.end();
-  }
-});
 
-export default router;
+    // Provide better error messages based on error type
+    let statusCode = 500;
+    let errorMessage = 'Internal server error';
+
+    if (error instanceof Error) {
+      if ('status' in error) {
+        statusCode = (error as any).status || 500;
+        if (statusCode === 429) {
+          errorMessage = 'Rate limited by provider. Please wait a moment and try again.';
+        } else if (statusCode === 401) {
+          errorMessage = 'Invalid API key';
+        } else if (statusCode >= 500) {
+          errorMessage = 'Provider service temporarily unavailable. Please try again.';
+        } else {
+          errorMessage = error.message;
+        }
+      } else {
+        errorMessage = error.message;
+      }
+    }
+
+    return new Response(
+      JSON.stringify({ error: errorMessage }),
+      { status: statusCode, headers: { 'Content-Type': 'application/json' } }
+    );
+  }
+}
