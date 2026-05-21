@@ -1,0 +1,18 @@
+{
+  "name": "resolv-workspace-root",
+  "version": "1.0.0",
+  "description": "Root workspace management for Resolv.ai Workspace FAQ Chatbot",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend",
+    "dev": "concurrently -n \"backend,frontend\" -c \"magenta,cyan\" \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
+    "cli": "node resolv.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.43.4",
+    "concurrently": "^8.2.2",
+    "dotenv": "^16.4.5",
+    "openai": "^4.52.0"
+  }
+}
