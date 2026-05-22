@@ -26,9 +26,9 @@ export default function ChatWindow({ messages }: ChatWindowProps) {
               <EmptyMedia variant="icon" className="w-12 h-12 bg-brand-cream border border-black text-brand-red rounded-none flex items-center justify-center mx-auto shadow-sm">
                 <Sparkles className="w-6 h-6 animate-slow-pulse" />
               </EmptyMedia>
-              <EmptyTitle className="font-black text-zinc-950 text-lg uppercase tracking-wider font-display">Resolv.ai Assistant</EmptyTitle>
+              <EmptyTitle className="font-black text-zinc-950 text-lg uppercase tracking-wider font-display">Resolv.ai FAQ System</EmptyTitle>
               <EmptyDescription className="text-zinc-500 text-xs font-bold leading-relaxed max-w-sm uppercase tracking-wide">
-                Ask any system question and get a direct binding answer instantly.
+                Search, query, and get instant verified answers from your FAQ knowledge base.
               </EmptyDescription>
             </EmptyHeader>
           </Empty>

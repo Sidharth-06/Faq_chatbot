@@ -50,7 +50,7 @@ export default function Navbar() {
       <div className="flex items-center gap-2">
         <span className="size-2.5 rounded-full bg-emerald-500 animate-pulse" />
         <h2 className="text-xs font-extrabold text-zinc-500 uppercase tracking-widest font-sans">
-          AI Assistant Workspace — Active
+          FAQ Resolution Workspace — Active
         </h2>
       </div>
 

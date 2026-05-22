@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Resolv.ai | Premium Intelligent AI Assistant",
-  description: "Resolve questions instantly with Resolv.ai's fast, context-aware AI assistant.",
+  title: "Resolv.ai | Premium Intelligent AI FAQ Engine",
+  description: "Resolve questions instantly with Resolv.ai's fast, context-aware AI FAQ Bot.",
 };
 
 export default function RootLayout({

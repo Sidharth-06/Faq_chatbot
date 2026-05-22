@@ -189,7 +189,7 @@ export default function SettingsPage() {
             Workspace Settings
           </h1>
           <p className="text-xs md:text-sm text-zinc-500 mt-1 max-w-xl font-bold">
-            Manage your account preferences and configure assistant response settings.
+            Manage your account preferences and configure FAQ engine settings.
           </p>
         </div>
 
@@ -302,7 +302,7 @@ export default function SettingsPage() {
                 </div>
 
                 <p className="text-xs text-zinc-400 leading-relaxed font-bold">
-                  Resolv.ai is an intelligent, high-performance assistant for fast, reliable answers and productive conversations.
+                  Resolv.ai is an intelligent, high-performance FAQ engine for fast, context-grounded factual retrieval.
                 </p>
                 <div className="mt-6 pt-3 border-t border-zinc-900 text-[10px] font-black text-zinc-500 flex justify-between font-mono">
                   <span>Engine Version: 1.2.0</span>
