@@ -323,6 +323,18 @@ export default function ChatPage() {
     }
   }, [loading, messages, sessionId]);
 
+  // Listen for clickable FAQ stack triggers from inside message bubbles
+  useEffect(() => {
+    const handleFaqSubmit = (e: Event) => {
+      const customEvent = e as CustomEvent<{ query: string }>;
+      if (customEvent.detail?.query && !sending) {
+        handleSendMessage(customEvent.detail.query);
+      }
+    };
+    window.addEventListener('submitFaqQuery', handleFaqSubmit);
+    return () => window.removeEventListener('submitFaqQuery', handleFaqSubmit);
+  }, [sessionId, sending, messages]);
+
   if (!sessionId) {
     return (
       <div className="flex-1 flex items-center justify-center flex-col gap-4 bg-[#fdf6f2]">

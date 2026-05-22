@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Message } from '@/lib/types';
 import { motion } from 'framer-motion';
-import { User, Sparkles, Bot } from 'lucide-react';
+import { User, Sparkles, Bot, ArrowRight } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import ReactMarkdown from 'react-markdown';
@@ -22,6 +22,44 @@ const Mermaid = dynamic(() => import('@/components/Mermaid'), {
   loading: () => <div className="text-xs text-zinc-400">Loading diagram...</div>,
   ssr: false,
 });
+
+function FaqStack({ questions }: { questions: string[] }) {
+  const handleClick = (question: string) => {
+    window.dispatchEvent(new CustomEvent('submitFaqQuery', { detail: { query: question } }));
+  };
+
+  return (
+    <div className="flex flex-col gap-2.5 my-3.5 w-full select-none">
+      <div className="text-[9px] font-black tracking-widest text-zinc-500 uppercase font-mono flex items-center gap-1.5">
+        <Sparkles className="w-3 h-3 text-brand-red animate-pulse" />
+        <span>Suggested FAQ Resolutions — Click to Ask</span>
+      </div>
+      <div className="flex flex-col gap-2">
+        {questions.map((q, idx) => (
+          <div
+            key={idx}
+            onClick={() => handleClick(q)}
+            className="group flex items-center justify-between gap-4 bg-brand-cream border-2 border-black p-3.5 shadow-[2px_2px_0_0_#000] hover:shadow-[4px_4px_0_0_#000] hover:translate-x-[-1px] hover:translate-y-[-1px] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0_0_#000] transition-all duration-200 cursor-pointer text-left"
+          >
+            <div className="flex items-start gap-3">
+              <span className="w-5 h-5 rounded-none border border-black bg-zinc-950 text-white text-[9px] font-black flex items-center justify-center font-mono mt-0.5 shrink-0 select-none group-hover:bg-brand-red group-hover:text-white transition-colors">
+                Q
+              </span>
+              <span className="text-xs md:text-sm font-extrabold text-zinc-900 group-hover:text-brand-red transition-colors leading-relaxed">
+                {q}
+              </span>
+            </div>
+            <div className="flex items-center gap-1 text-[9px] font-black uppercase tracking-wider text-zinc-500 group-hover:text-brand-red transition-colors shrink-0">
+              <span>Ask</span>
+              <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 
 interface ChatMessageProps {
   message: Message;
@@ -110,6 +148,17 @@ const markdownComponents: Components = {
     if (isBlock && className) {
       const language = className.replace('language-', '').toLowerCase();
       
+      if (language === 'faq' || language === 'faq-stack' || language === 'faq_stack') {
+        try {
+          const questions = JSON.parse(trimmed);
+          if (Array.isArray(questions)) {
+            return <FaqStack questions={questions} />;
+          }
+        } catch (e) {
+          console.error('Failed to parse FAQ JSON:', e);
+        }
+      }
+
       if (language === 'mermaid') {
         return <Mermaid chart={trimmed} />;
       }
@@ -171,7 +220,7 @@ const markdownComponents: Components = {
       })();
 
       const language = codeClassName.replace('language-', '').toLowerCase();
-      if (isChart || language === 'mermaid' || language === 'chart' || language === 'json-chart' || language === 'json_chart') {
+      if (isChart || language === 'mermaid' || language === 'chart' || language === 'json-chart' || language === 'json_chart' || language === 'faq' || language === 'faq-stack' || language === 'faq_stack') {
         return <>{children}</>;
       }
     }

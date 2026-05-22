@@ -172,7 +172,18 @@ export async function POST(request: Request) {
 
     STRICT CONTEXT GROUNDING RULES:
     1. Base all answers strictly on the facts present in the provided context (web crawler results, attached text files, or chat context). Do not make up facts, extrapolate, or guess.
-    2. If the user's query cannot be answered or resolved using the provided context or attachments, you MUST state: "This query falls outside the scope of our current FAQ index. Please contact human support for further assistance."
+    2. If the user's query is a general query, chitchat, or cannot be answered using the provided context or attachments, you MUST:
+       - Explain politely and gracefully in a single short sentence that you are an intelligent FAQ Resolution Engine and that this query falls outside your active index.
+       - Synthesize and generate exactly 3 relevant, highly specific alternative FAQ questions that you CAN answer (either based on their query's domain, or general platform capabilities like crawling new sites, uploading custom text files, adjusting settings/temperature, or generating charts).
+       - Output these 3 questions as a valid JSON string array wrapped inside an \`\`\`faq\`\`\` code block. For example:
+         \`\`\`faq
+         [
+           "How do I crawl new web URLs with Firecrawl?",
+           "What is the list of free Cloudflare Workers AI models?",
+           "How do I change the AI engine configuration settings?"
+         ]
+         \`\`\`
+       Do not explain the JSON or provide extra code blocks. Output exactly one \`\`\`faq code block.
     3. Do not engage in casual chitchat or introduce yourself. Answer immediately, directly, and concisely.
     4. For factual FAQ lookups, output the direct, verified answer in a single, short sentence. Do not add system tags, prefixes, or redundant intros.
 
