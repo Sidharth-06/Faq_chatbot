@@ -12,20 +12,19 @@ import { Loader2 } from 'lucide-react';
 const STREAMING_ID = '__streaming__';
 
 const POPULAR_MODELS = [
-  { id: 'nvidia/nemotron-nano-12b-v2-vl:free', name: 'Nemotron Nano 12B V2 VL' },
-  { id: 'qwen/qwen3-next-80b-a3b-instruct:free', name: 'Qwen3 Next 80B A3B' },
-  { id: 'nvidia/nemotron-nano-9b-v2:free', name: 'Nemotron Nano 9B V2' },
-  { id: 'openai/gpt-oss-120b:free', name: 'GPT OSS 120B' },
-  { id: 'openai/gpt-oss-20b:free', name: 'GPT OSS 20B' },
-  { id: 'z-ai/glm-4.5-air:free', name: 'GLM 4.5 Air' },
+  { id: '@cf/meta/llama-3.1-8b-instruct', name: 'Llama 3.1 8B Instruct' },
+  { id: '@cf/meta/llama-3.3-70b-instruct', name: 'Llama 3.3 70B Instruct' },
+  { id: '@cf/meta/llama-3-8b-instruct', name: 'Llama 3 8B Instruct' },
+  { id: '@cf/mistral/mistral-7b-instruct-v0.2', name: 'Mistral 7B Instruct v0.2' },
+  { id: '@cf/qwen/qwen1.5-14b-chat', name: 'Qwen 1.5 14B Chat' },
 ];
 
 const DEFAULT_MODELS = [
-  'nvidia/nemotron-nano-12b-v2-vl:free',
-  'qwen/qwen3-next-80b-a3b-instruct:free',
-  'nvidia/nemotron-nano-9b-v2:free',
-  'openai/gpt-oss-120b:free',
-  'openai/gpt-oss-20b:free',
+  '@cf/meta/llama-3.1-8b-instruct',
+  '@cf/meta/llama-3.3-70b-instruct',
+  '@cf/meta/llama-3-8b-instruct',
+  '@cf/mistral/mistral-7b-instruct-v0.2',
+  '@cf/qwen/qwen1.5-14b-chat',
 ];
 
 export default function ChatPage() {
@@ -35,7 +34,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(!!sessionId);
   const [sending, setSending] = useState(false);
   const [availableModels, setAvailableModels] = useState<{ id: string; name: string }[]>([]);
-  const [selectedModel, setSelectedModel] = useState<string>('nvidia/nemotron-nano-12b-v2-vl:free');
+  const [selectedModel, setSelectedModel] = useState<string>('@cf/meta/llama-3.1-8b-instruct');
   const supabase = createClient();
 
   // Track if we've already generated a title for this session

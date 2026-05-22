@@ -16,20 +16,19 @@ interface ModelOption {
 }
 
 const POPULAR_MODELS: ModelOption[] = [
-  { id: 'nvidia/nemotron-nano-12b-v2-vl:free', name: 'Nemotron Nano 12B V2 VL', desc: 'NVIDIA Multimodal model' },
-  { id: 'qwen/qwen3-next-80b-a3b-instruct:free', name: 'Qwen3 Next 80B A3B', desc: 'High capability Qwen next-gen model' },
-  { id: 'nvidia/nemotron-nano-9b-v2:free', name: 'Nemotron Nano 9B V2', desc: 'NVIDIA highly optimized language model' },
-  { id: 'openai/gpt-oss-120b:free', name: 'GPT OSS 120B', desc: 'Large open source instruction model' },
-  { id: 'openai/gpt-oss-20b:free', name: 'GPT OSS 20B', desc: 'Fast general-purpose instruction model' },
-  { id: 'z-ai/glm-4.5-air:free', name: 'GLM 4.5 Air', desc: 'High context, creative reasoning model' },
+  { id: '@cf/meta/llama-3.1-8b-instruct', name: 'Llama 3.1 8B Instruct', desc: 'Fast, highly-capable general purpose model' },
+  { id: '@cf/meta/llama-3.3-70b-instruct', name: 'Llama 3.3 70B Instruct', desc: 'Large, intelligent reasoning model' },
+  { id: '@cf/meta/llama-3-8b-instruct', name: 'Llama 3 8B Instruct', desc: 'Capable 8B language model from Meta' },
+  { id: '@cf/mistral/mistral-7b-instruct-v0.2', name: 'Mistral 7B Instruct v0.2', desc: 'Reliable, compact instruction model' },
+  { id: '@cf/qwen/qwen1.5-14b-chat', name: 'Qwen 1.5 14B Chat', desc: 'Capable Qwen chat and reasoning model' },
 ];
 
 const DEFAULT_MODELS = [
-  'nvidia/nemotron-nano-12b-v2-vl:free',
-  'qwen/qwen3-next-80b-a3b-instruct:free',
-  'nvidia/nemotron-nano-9b-v2:free',
-  'openai/gpt-oss-120b:free',
-  'openai/gpt-oss-20b:free',
+  '@cf/meta/llama-3.1-8b-instruct',
+  '@cf/meta/llama-3.3-70b-instruct',
+  '@cf/meta/llama-3-8b-instruct',
+  '@cf/mistral/mistral-7b-instruct-v0.2',
+  '@cf/qwen/qwen1.5-14b-chat',
 ];
 
 export default function SettingsPage() {
@@ -324,7 +323,7 @@ export default function SettingsPage() {
                 </div>
 
                 <p className="text-xs text-zinc-500 font-bold mb-4 leading-relaxed">
-                  Choose exactly up to 5 free models from OpenRouter to toggle between in your chats.
+                  Choose exactly up to 5 free models from Cloudflare Workers AI to toggle between in your chats.
                 </p>
 
                 <div className="flex flex-col gap-2.5 max-h-[340px] overflow-y-auto pr-1">

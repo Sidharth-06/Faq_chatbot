@@ -100,18 +100,15 @@ function processMessageAttachments(content: string): { cleanedText: string; extr
 
 export async function POST(request: Request) {
   // Lazy-init: client created inside handler so missing env vars don't crash build
+  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? '';
   const openai = new OpenAI({
-    baseURL: 'https://openrouter.ai/api/v1',
-    apiKey: process.env.OPENROUTER_API_KEY ?? '',
-    defaultHeaders: {
-      'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
-      'X-Title': 'Resolv.ai',
-    },
+    baseURL: `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/v1`,
+    apiKey: process.env.CLOUDFLARE_API_TOKEN ?? '',
   });
 
   try {
     const body = await request.json();
-    const { session_id, message, model = 'openai/gpt-oss-20b:free' } = body;
+    const { session_id, message, model = '@cf/meta/llama-3.1-8b-instruct' } = body;
 
     const supabase = await createServerSupabaseClient();
 
@@ -220,10 +217,6 @@ export async function POST(request: Request) {
           temperature: 0.2,
           max_tokens: 1024,
           stream: true,
-          ...({
-            reasoning: { enabled: true },
-            include_reasoning: true,
-          } as any),
         }),
       3,
       1000
