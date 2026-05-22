@@ -35,15 +35,6 @@ export default function ChatWindow({ messages }: ChatWindowProps) {
         </div>
       ) : (
         <>
-          {/* Beautiful modern elegant date separator */}
-          <div className="flex items-center justify-center my-2 select-none shrink-0">
-            <div className="h-[1px] bg-zinc-200/80 flex-1 max-w-[120px]" />
-            <span className="text-[9px] font-black text-zinc-400 tracking-[0.3em] mx-6 uppercase font-sans">
-              OCTOBER 24, 2024
-            </span>
-            <div className="h-[1px] bg-zinc-200/80 flex-1 max-w-[120px]" />
-          </div>
-
           {messages.map((message, index) => (
             <ChatMessage key={`${message.id}-${index}`} message={message} />
           ))}
