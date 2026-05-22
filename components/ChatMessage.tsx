@@ -117,6 +117,25 @@ const markdownComponents: Components = {
   code: ({ children, className }) => {
     const trimmed = String(children).trim();
 
+    // Smart detection of FAQ dynamic JSON array
+    const isFaqStack = (() => {
+      try {
+        const obj = JSON.parse(trimmed);
+        return Array.isArray(obj) && obj.length > 0 && obj.every(q => typeof q === 'string');
+      } catch {
+        return false;
+      }
+    })();
+
+    if (isFaqStack) {
+      try {
+        const questions = JSON.parse(trimmed);
+        return <FaqStack questions={questions} />;
+      } catch (e) {
+        console.error('Failed to parse FAQ JSON:', e);
+      }
+    }
+
     // Smart detection of Chart JSON
     const isChart = (() => {
       try {
@@ -202,6 +221,15 @@ const markdownComponents: Components = {
       const codeContent = String(childProps?.children || '').trim();
       const codeClassName = String(childProps?.className || '');
       
+      const isFaqStack = (() => {
+        try {
+          const obj = JSON.parse(codeContent);
+          return Array.isArray(obj) && obj.length > 0 && obj.every(q => typeof q === 'string');
+        } catch {
+          return false;
+        }
+      })();
+
       const isChart = (() => {
         try {
           const obj = JSON.parse(codeContent);
@@ -220,7 +248,7 @@ const markdownComponents: Components = {
       })();
 
       const language = codeClassName.replace('language-', '').toLowerCase();
-      if (isChart || language === 'mermaid' || language === 'chart' || language === 'json-chart' || language === 'json_chart' || language === 'faq' || language === 'faq-stack' || language === 'faq_stack') {
+      if (isChart || isFaqStack || language === 'mermaid' || language === 'chart' || language === 'json-chart' || language === 'json_chart' || language === 'faq' || language === 'faq-stack' || language === 'faq_stack') {
         return <>{children}</>;
       }
     }
